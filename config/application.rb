@@ -22,8 +22,8 @@ require("rails/test_unit/railtie")
 Bundler.require(*Rails.groups)
 
 require_relative("../lib/active_job/queue_adapters/pubsub_adapter")
-require_relative("../lib/pubsub")
-require_relative("../lib/pubsub_job_queue")
+require_relative("../lib/pubsub/connection")
+require_relative("../lib/pubsub/job_queue")
 
 module KisiApiChallenge
   class Application < Rails::Application

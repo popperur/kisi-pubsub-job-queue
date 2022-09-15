@@ -5,7 +5,7 @@ module ActiveJob
     class PubsubAdapter
 
       def initialize
-        @job_queue = PubsubJobQueue.new
+        @job_queue = Pubsub::JobQueue.new
       end
 
       # Enqueues a job to be performed.
