@@ -1,3 +1,9 @@
+GIT
+  remote: https://github.com/nebulab/simple_command.git
+  revision: 143c5f7a7ca2c0941d86283555e82900daa3c013
+  specs:
+    simple_command (1.0.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -264,6 +270,7 @@ DEPENDENCIES
   puma (~> 5.0)
   rails (~> 6.1.4, >= 6.1.4.4)
   rubocop
+  simple_command!
   sqlite3 (~> 1.4)
 
 RUBY VERSION

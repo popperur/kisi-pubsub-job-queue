@@ -12,7 +12,6 @@ module Pubsub
       attr_writer(:immediate)
 
       # Initializes a new Enqueue.
-      #
       # @param logger [Logger] logger to use. Defaults to 'stdout'.
       def initialize(logger: Logger.new($stdout))
         @logger = logger
