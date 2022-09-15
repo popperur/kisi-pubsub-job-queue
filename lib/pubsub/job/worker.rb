@@ -9,7 +9,6 @@ module Pubsub
     class Worker
 
       # Initializes the Worker.
-      #
       # @param queue_name [String] The name of the queue
       # @param logger [Logger] The logger to use. Defaults to 'stdout'.
       def initialize(queue_name, logger: Logger.new($stdout))
@@ -63,14 +62,13 @@ module Pubsub
       private
 
       # Finds or creates a queue worker subscription.
-      #
-      # @return [Google::Cloud::PubSub::Subscription]
+      # @return [Google::Cloud::PubSub::Subscription] The subscription instance.
       def worker_sub
         @worker_sub ||= pubsub_client.subscription(@queue_name)
       end
 
-      # Creates or retrieves the pubsub client
-      # @return [Pubsub::Client] The pubsub client
+      # Creates or retrieves the pubsub client.
+      # @return [Pubsub::Client] The pubsub client.
       def pubsub_client
         @pubsub_client ||= Pubsub::Client.new
       end

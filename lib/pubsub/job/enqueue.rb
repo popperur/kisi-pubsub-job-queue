@@ -20,14 +20,13 @@ module Pubsub
       end
 
       # Enqueues a job to be performed.
-      #
       # The job is sent to pubsub asynchronously,
       # read more about +publish_async+ {here}[https://cloud.google.com/ruby/docs/reference/google-cloud-pubsub/latest/Google-Cloud-PubSub-AsyncPublisher].
       # @param job_data [Hash] The job to be performed.
       # @param scheduled_at [Float] The time to perform the job. Defaults to the current time.
       # @param queue_name [String] The name of the queue. Defaults to 'default'.
       def enqueue(job_data, scheduled_at: Time.now.to_f, queue_name: "default")
-        @logger.info("Enqueueing job \"#{job_data['job_id']}\" to the \"#{queue_name}\" queue..")
+        @logger.debug("Enqueueing job \"#{job_data['job_id']}\" to the \"#{queue_name}\" queue..")
         message = job_data.to_json
         attributes = { scheduled_at: scheduled_at }
         if @immediate
@@ -40,7 +39,6 @@ module Pubsub
       end
 
       # Executes a shutdown
-      #
       # @param wait [Boolean] If 'true', waits for the termination. Defaults to 'true'.
       def shutdown(wait: true)
         shutdown_async_publishers(wait: wait)
@@ -49,7 +47,6 @@ module Pubsub
       private
 
       # Finds or creates a queue topic.
-      #
       # @param name [String] The name of the queue.
       # @return [Google::Cloud::PubSub::Topic]
       def queue(name)
@@ -57,7 +54,6 @@ module Pubsub
       end
 
       # Stops the async publishers
-      #
       # @param wait [Boolean] If 'true', waits for the termination. Defaults to 'true'.
       def shutdown_async_publishers(wait: true)
         queue_topic_map.values do |topic|
@@ -68,14 +64,12 @@ module Pubsub
       end
 
       # Retrieves the queue topic map
-      #
       # @return [Hash] The queue topic map
       def queue_topic_map
         @queue_topic_map ||= {}
       end
 
       # Creates or retrieves the pubsub client
-      #
       # @return [Pubsub::Client] The pubsub client
       def pubsub_client
         @pubsub_client ||= Pubsub::Client.new

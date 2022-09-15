@@ -6,55 +6,65 @@ require("mocha/minitest")
 
 describe(Pubsub::Job::Executor) do
   let(:pubsub_client) { Pubsub::Client.new }
+  let(:job_executor) { Pubsub::Job::Executor.new(logger: Logger.new("/dev/null")) }
+  let(:job_data) { MockJob.new.serialize }
 
-  it("acknowledges message, and executes the job") do
-    job_data = MockJob.new.serialize
-    message = rec_message(job_data.to_json)
-    message.expects(:acknowledge!)
-
-    assert_process_output(message, /Executing MockJob/)
+  before do
+    job_executor.immediate = true
   end
 
-  it("delays the job execution if needed") do
-    job_data = MockJob.new.serialize
-    message = rec_message(job_data.to_json, attributes: { scheduled_at: (Time.now + 5.minutes).to_f.to_s })
-    message.expects(:modify_ack_deadline!)
+  describe("with acknowledging the message") do
+    let(:rec_msg) { rec_message(job_data.to_json) }
 
-    assert_process_output(message, /was delayed for 300 seconds/)
+    before do
+      rec_msg.expects(:acknowledge!)
+    end
+
+    it("can execute a job") do
+      job_executor.expects(:execute_job)
+      job_executor.process(rec_msg)
+    end
+
+    it("can lock a job") do
+      job_executor.expects(:lock_job)
+      job_executor.process(rec_msg)
+    end
+
+    it("can unlock a job") do
+      job_executor.expects(:unlock_job)
+      job_executor.process(rec_msg)
+    end
+
   end
 
-  it("moves the job to the morgue queue after 3 unsuccessful attempt") do
+  it("can delay a job execution") do
+    rec_msg = rec_message(job_data.to_json, attributes: { scheduled_at: (Time.now + 5.minutes).to_f.to_s })
+    rec_msg.expects(:modify_ack_deadline!)
+    job_executor.process(rec_msg)
+  end
+
+  it("can move the job to the morgue queue") do
     job = MockJob.new(raise_error: true)
     # simulate 3 failed attempts
     job.executions = 3
     job.exception_executions = { "[JobError]" => 3 }
     job_data = job.serialize
-    message = rec_message(job_data.to_json)
-    message.expects(:acknowledge!)
-
-    assert_process_output(message, /Moving job to morgue/)
+    rec_message = rec_message(job_data.to_json)
+    rec_message.stubs(:acknowledge!)
+    job_executor.expects(:move_job_to_morgue)
+    job_executor.process(rec_message)
   end
 
-  it("acknowledges message, but logs error in case of an invalid json message") do
-    message = rec_message("not a valid json")
-    message.expects(:acknowledge!)
-
-    assert_process_output(message, /Parsing the message data failed/)
-  end
-
-  def assert_process_output(message, expected_out)
-    assert_output(expected_out) do
-      job_executor = Pubsub::Job::Executor.new
-      job_executor.immediate = true
-      job_executor.process(message)
-    end
+  it("can stop processing for an invalid job") do
+    rec_msg = rec_message("not a valid job data")
+    job_executor.expects(:execute_job).never
+    job_executor.process(rec_msg)
   end
 
   # Creates a fake {Google::Cloud::PubSub::ReceivedMessage} from the job data.
-  #
   # @param data [String] The job data.
   # @param attributes [Hash] The message attributes.
-  # @return [Google::Cloud::PubSub::ReceivedMessage]
+  # @return [Google::Cloud::PubSub::ReceivedMessage] The created message object.
   def rec_message(data, attributes: {})
     subscription = pubsub_client.subscription("default")
     hash = rec_message_hash(data, attributes: attributes)
