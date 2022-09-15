@@ -5,14 +5,14 @@ module ActiveJob
     class PubsubAdapter
 
       def initialize
-        @job_queue = Pubsub::JobQueue.new
+        @handler = Pubsub::Job::Enqueue.new
       end
 
       # Enqueues a job to be performed.
       #
       # @param [ActiveJob::Base] job The job to be performed.
       def enqueue(job)
-        @job_queue.enqueue(job)
+        enqueue_at(job, Time.now.to_f)
       end
 
       # Enqueues a job to be performed at a certain time.
@@ -20,7 +20,7 @@ module ActiveJob
       # @param [ActiveJob::Base] job The job to be performed.
       # @param [Float] timestamp The time to perform the job.
       def enqueue_at(job, timestamp)
-        @job_queue.enqueue(job, scheduled_at: timestamp)
+        @handler.enqueue(job.serialize, scheduled_at: timestamp, queue_name: job.queue_name)
       end
 
       # Gracefully stops enqueuing jobs.
@@ -28,7 +28,7 @@ module ActiveJob
       #
       # @param wait [Boolean] if true, waits for the termination
       def shutdown(wait: true)
-        @job_queue.shutdown(wait: wait)
+        @handler.shutdown(wait: wait)
       end
 
     end
