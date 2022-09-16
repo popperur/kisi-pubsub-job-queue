@@ -19,7 +19,7 @@ namespace(:worker) do
   end
 
   def queue_name
-    @queue_name ||= ENV["queue_name"] || "default"
+    @queue_name ||= ENV["QUEUE_NAME"] || "default"
   end
 
   def job_worker
