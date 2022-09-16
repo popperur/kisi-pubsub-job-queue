@@ -21,24 +21,33 @@ To start all services, make sure you have [Docker](https://www.docker.com/produc
 $ docker compose up
 ```
 
-To run the job spawner service, run:
+To test the background job system, open a rails console and enqueue `MockJob` jobs:
+```
+$ docker compose exec web rails console
+> MockJob.perform_later(sleep_duration: 3, raise_error: true)
+```
+The example above will start a job that sleeps 3 seconds, then raises a `JobError`. 
+There is `retry_on` configured on this error, so the ActiveJob system will re-enqueue the job 2 more times, 
+five minutes apart. You can change this configuration in the `ApplicationJob` class.
+
+
+You can use a job spawner service to quickly enqueue a number of jobs:
 ```
 $ docker compose exec web rails console
 > Pubsub::Job::Spawner.call(job_count: 10)
 ```
 
+The example above will enqueue 10 `MockJob` jobs where both the `sleep_duration` and the `raise_error` 
+values are randomized.
 
-To clear the queue, run
+You can remove all pending jobs from a queue with the `worker:clear` task:
 ```
 $ docker compose exec web rake worker:clear
 ```
-
 
 To execute the test suite, run:
 ```
 $ docker compose run --rm web rails test
 ```
-
-
 
 If you run docker with a VM (e.g. Docker Desktop for Mac), it is recommended to allocate at least 2GB Memory.
