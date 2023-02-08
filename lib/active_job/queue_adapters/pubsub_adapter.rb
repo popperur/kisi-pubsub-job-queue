@@ -3,20 +3,34 @@
 module ActiveJob
   module QueueAdapters
     class PubsubAdapter
-      # Enqueue a job to be performed.
+
+      def initialize
+        @handler = Pubsub::Job::Enqueue.new
+      end
+
+      # Enqueues a job to be performed.
       #
       # @param [ActiveJob::Base] job The job to be performed.
       def enqueue(job)
-        raise(NotImplementedError)
+        enqueue_at(job, Time.now.to_f)
       end
 
-      # Enqueue a job to be performed at a certain time.
+      # Enqueues a job to be performed at a certain time.
       #
       # @param [ActiveJob::Base] job The job to be performed.
       # @param [Float] timestamp The time to perform the job.
       def enqueue_at(job, timestamp)
-        raise(NotImplementedError)
+        @handler.enqueue(job.serialize, scheduled_at: timestamp, queue_name: job.queue_name)
       end
+
+      # Gracefully stops enqueuing jobs.
+      # Waits for termination by default. Pass `wait: false` to continue.
+      #
+      # @param wait [Boolean] if true, waits for the termination
+      def shutdown(wait: true)
+        @handler.shutdown(wait: wait)
+      end
+
     end
   end
 end

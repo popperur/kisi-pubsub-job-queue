@@ -1,3 +1,9 @@
+GIT
+  remote: https://github.com/nebulab/simple_command.git
+  revision: 143c5f7a7ca2c0941d86283555e82900daa3c013
+  specs:
+    simple_command (1.0.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -158,6 +164,7 @@ GEM
     mini_mime (1.1.2)
     mini_portile2 (2.7.1)
     minitest (5.15.0)
+    mocha (1.14.0)
     multi_json (1.15.0)
     multipart-post (2.1.1)
     nio4r (2.5.8)
@@ -258,10 +265,12 @@ DEPENDENCIES
   byebug
   google-cloud-pubsub
   listen (~> 3.3)
+  mocha
   pry-rails
   puma (~> 5.0)
   rails (~> 6.1.4, >= 6.1.4.4)
   rubocop
+  simple_command!
   sqlite3 (~> 1.4)
 
 RUBY VERSION
