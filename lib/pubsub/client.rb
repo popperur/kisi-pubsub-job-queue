@@ -30,10 +30,11 @@ module Pubsub
     # @param name [String] The name of the subscription to find or create
     # @param topic [Google::Cloud::PubSub::Topic] The topic to which the subscription is attached.
     #  If not defined, a topic with the same name will be created.
+    # @param ack_deadline [Integer] The ack deadline in seconds. Defaults to 10 minutes (600 seconds)
     # @return [Google::Cloud::PubSub::Subscription]
-    def subscription(name, topic: nil)
+    def subscription(name, topic: nil, ack_deadline: 600)
       topic ||= topic(name)
-      topic.subscription(name) || topic.subscribe(name)
+      topic.subscription(name) || topic.subscribe(name, deadline: ack_deadline)
     end
 
     # Retrieves the PubSub project

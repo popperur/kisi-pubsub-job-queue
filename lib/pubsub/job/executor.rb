@@ -12,50 +12,24 @@ module Pubsub
 
       QUEUE_MORGUE = "morgue"
 
-      DEFAULT_EXECUTOR_OPTIONS = {
-        min_threads: 0,
-        max_threads: Concurrent.processor_count,
-        auto_terminate: true,
-        idletime: 60, # 1 minute
-        max_queue: 0, # unlimited
-        fallback_policy: :caller_runs # shouldn't matter -- 0 max queue
-      }.freeze
-
-      # Used for the test suite.
-      attr_writer(:immediate)
-
       # Initializes the object.
       # @param logger [Logger] logger to use. Defaults to 'stdout'.
-      # @param executor_options [Hash] executor options, see {Concurrent::ThreadPoolExecutor}[https://ruby-concurrency.github.io/concurrent-ruby/master/Concurrent/ThreadPoolExecutor.html].
-      def initialize(logger: Logger.new($stdout), executor_options: {})
-        @async_executor = Concurrent::ThreadPoolExecutor.new(DEFAULT_EXECUTOR_OPTIONS.merge(executor_options))
+      def initialize(logger: Logger.new($stdout))
         @logger = logger
-        @immediate = false
         @mutex = Mutex.new
       end
 
       # Processes the message received from Pub/Sub
       # @param message [Google::Cloud::PubSub::ReceivedMessage] The Pub/Sub message containing the job to process.
       def process(message)
-        @logger.debug("Message \"#{message.message_id}\" received.")
-        if @immediate
-          process_message(message)
-        else
-          Concurrent::Promises.future_on(@async_executor, message) do |async_message|
-            process_message(async_message)
-          end
-        end
-      end
-
-      private
-
-      # Processes the message received from Pub/Sub
-      # @param message [Google::Cloud::PubSub::ReceivedMessage] The Pub/Sub message containing the job to process.
-      def process_message(message)
+        @logger.debug("Processing message \"#{message.message_id}\"..")
         current_time = Time.now.to_f
         scheduled_at = message.attributes["scheduled_at"].to_f
         current_time > scheduled_at ? execute(message) : delay(message, current_time, scheduled_at)
+        @logger.debug("Returning from processing for message \"#{message.message_id}\"..")
       end
+
+      private
 
       # Executes the job
       # @param message [Google::Cloud::PubSub::ReceivedMessage] The Pub/Sub message containing the job to execute.

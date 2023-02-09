@@ -11,10 +11,12 @@ module Pubsub
       # Initializes the Worker.
       # @param queue_name [String] The name of the queue
       # @param logger [Logger] The logger to use. Defaults to 'stdout'.
-      def initialize(queue_name, logger: Logger.new($stdout))
+      # @param ack_deadline [Integer] The ack deadline in seconds. Defaults to 600 seconds (10 minutes).
+      def initialize(queue_name, logger: Logger.new($stdout), ack_deadline: 600)
         @queue_name = queue_name
         @job_executor = Pubsub::Job::Executor.new(logger: logger)
         @logger = logger
+        @ack_deadline = ack_deadline
       end
 
       # Creates a listener that listens for messages (jobs) received on the worker queue.
@@ -25,6 +27,7 @@ module Pubsub
 
         # Create a subscriber to listen for available messages.
         subscriber = sub.listen do |message|
+          @logger.debug("Message \"#{message.message_id}\" received.")
           # process the message
           @job_executor.process(message)
         end
@@ -64,7 +67,7 @@ module Pubsub
       # Finds or creates a queue worker subscription.
       # @return [Google::Cloud::PubSub::Subscription] The subscription instance.
       def worker_sub
-        @worker_sub ||= pubsub_client.subscription(@queue_name)
+        @worker_sub ||= pubsub_client.subscription(@queue_name, ack_deadline: @ack_deadline)
       end
 
       # Creates or retrieves the pubsub client.

@@ -9,10 +9,6 @@ describe(Pubsub::Job::Executor) do
   let(:job_executor) { Pubsub::Job::Executor.new(logger: Logger.new("/dev/null")) }
   let(:job_data) { MockJob.new.serialize }
 
-  before do
-    job_executor.immediate = true
-  end
-
   describe("with acknowledging the message") do
     let(:rec_msg) { rec_message(job_data.to_json) }
 
